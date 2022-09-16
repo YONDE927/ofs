@@ -17,6 +17,7 @@
 #include <fcntl.h>
 #include <dirent.h>
 #include <sys/stat.h>
+#include <arpa/inet.h>
 
 in_addr_t FtpServer::get_in_addr(int sd){
     sockaddr_in addr;
@@ -24,6 +25,7 @@ in_addr_t FtpServer::get_in_addr(int sd){
     if(getpeername(sd, (sockaddr*)&addr, &socklen) < 0){
         return -1;
     }else{
+        std::cout << inet_ntoa(addr.sin_addr) << std::endl; 
         return addr.sin_addr.s_addr;
     }
 }

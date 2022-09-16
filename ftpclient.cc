@@ -125,6 +125,7 @@ int FtpClient::readdir_(std::string path, std::vector<dirent>& dirents){
 
     auto rtype = ftp::readdir;
     if(send(sd, &rtype, sizeof(rtype), 0) != sizeof(rtype)){
+        std::cout << "send req type error" << std::endl;
         client_.close_socket();
         return -1;
     }
@@ -133,12 +134,14 @@ int FtpClient::readdir_(std::string path, std::vector<dirent>& dirents){
     req.reqtype = ftp::readdir;
     std::memcpy(&req.path, path.c_str(), path.size() + 1);
     if(send(sd, &req, sizeof(req), 0) != sizeof(req)){
+        std::cout << "send req error" << std::endl;
         client_.close_socket();
         return -1;
     }
 
     ftp::readdirRes res;
     if(recv(sd, &res, sizeof(res), 0) != sizeof(res)){
+        std::cout << "recv res error" << std::endl;
         client_.close_socket();
         return -1;
     }
@@ -149,6 +152,7 @@ int FtpClient::readdir_(std::string path, std::vector<dirent>& dirents){
         struct dirent de;
         for(int i=0; i<res.ndirent; i++){
             if(recv(sd, &de, sizeof(de), 0) != sizeof(de)){
+                std::cout << "recv dirent error" << std::endl;
                 dirents.clear();
                 client_.close_socket();
                 return -1;

@@ -38,6 +38,8 @@ void getattr_repl(FtpClient& client){
             << " " << stbuf.st_mtime << std::endl;
     }else if(rc > 0){
         print_errno(rc);
+    }else{
+        std::cout << "connection error" << std::endl;
     }
 }
 
@@ -53,6 +55,8 @@ void readdir_repl(FtpClient& client){
         }
     }else if(rc > 0){
         print_errno(rc);
+    }else{
+        std::cout << "connection error" << std::endl;
     }
 }
 
@@ -91,6 +95,8 @@ void read_repl(FtpClient& client){
         std::cout << buffer.data() << std::endl;
     }else if(rc > 0){
         print_errno(rc);
+    }else{
+        std::cout << "connection error" << std::endl;
     }
 }
 
@@ -118,6 +124,8 @@ void write_repl(FtpClient& client){
         std::cout << "[write success]" << std::endl;
     }else if(rc > 0){
         print_errno(rc);
+    }else{
+        std::cout << "connection error" << std::endl;
     }
 }
 
@@ -145,6 +153,8 @@ void lock_repl(FtpClient& client){
         std::cout << "[lock success]" << std::endl;
     }else if(rc > 0){
         print_errno(rc);
+    }else{
+        std::cout << "connection error" << std::endl;
     }
 }
 
@@ -157,6 +167,8 @@ void create_repl(FtpClient& client){
         std::cout << "[create success]" << std::endl;
     }else if(rc > 0){
         print_errno(rc);
+    }else{
+        std::cout << "connection error" << std::endl;
     }
 }
 
