@@ -272,8 +272,8 @@ int FtpServer::readdir_(int sd){
     if(dirents.size() > 0){
         int dirents_size = dirents.size() * sizeof(dirent);
         int nsend = send(sd, dirents.data(), dirents_size, 0);
+        std::cout << "dirents nsend == " << nsend << ", but dirents_size == " << dirents_size << std::endl;
         if(nsend != dirents_size){
-            std::cout << "dirents nsend == " << nsend << ", but dirents_size == " << dirents_size << std::endl;
             return -1;
         }
     }
