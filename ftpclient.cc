@@ -120,6 +120,7 @@ int FtpClient::readdir_(std::string path, std::vector<dirent>& dirents){
     std::lock_guard<std::mutex> lock(mtx_);
     int sd = client_.conn();
     if(sd < 0){
+        std::cout << "client_.conn() error" << std::endl;
         return -1;
     }
 
