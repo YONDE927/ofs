@@ -4,15 +4,21 @@
 #include "ftpserver.h"
 #include "connection.h"
 
+#include <cstring>
 #include <iostream>
 #include <stdexcept>
 #include <vector>
 #include <list>
+#include <cerrno>
 
 #include <netinet/in.h>
 #include <arpa/inet.h>
 #include <sys/stat.h>
 #include <dirent.h>
+
+void print_errno(int errno_){
+    std::cout << strerror(errno_) << std::endl;
+}
 
 void echoback_repl(FtpClient& client){
     std::string msg;
@@ -26,9 +32,12 @@ void getattr_repl(FtpClient& client){
     std::cout << "path: ";
     std::cin >> path;
     struct stat stbuf;
-    if(client.getattr_(path, stbuf) == 0){
+    int rc = client.getattr_(path, stbuf);
+    if(rc == 0){
         std::cout << stbuf.st_size << " " << stbuf.st_ctime 
             << " " << stbuf.st_mtime << std::endl;
+    }else if(rc > 0){
+        print_errno(rc);
     }
 }
 
@@ -37,10 +46,13 @@ void readdir_repl(FtpClient& client){
     std::cout << "path: ";
     std::cin >> path;
     std::vector<dirent> dirents;
-    if(client.readdir_(path, dirents) == 0){
+    int rc = client.readdir_(path, dirents);
+    if(rc == 0){
         for(auto& de: dirents){
             std::cout << de.d_name << std::endl;
         }
+    }else if(rc > 0){
+        print_errno(rc);
     }
 }
 
@@ -74,8 +86,11 @@ void read_repl(FtpClient& client){
         return;
     }
     std::vector<char> buffer;
-    if(client.read_(path, offset, size, buffer) == 0){
+    int rc = client.read_(path, offset, size, buffer);
+    if(rc == 0){
         std::cout << buffer.data() << std::endl;
+    }else if(rc > 0){
+        print_errno(rc);
     }
 }
 
@@ -98,8 +113,11 @@ void write_repl(FtpClient& client){
     std::string buffer;
     std::cout << "buffer: ";
     std::cin >> buffer;
-    if(client.write_(path, offset, size, buffer.c_str()) == 0){
+    int rc = client.write_(path, offset, size, buffer.c_str());
+    if(rc == 0){
         std::cout << "[write success]" << std::endl;
+    }else if(rc > 0){
+        print_errno(rc);
     }
 }
 
@@ -122,8 +140,11 @@ void lock_repl(FtpClient& client){
     }else{
         return;
     }
-    if(client.lock_(path, ltype) == 0){
+    int rc = client.lock_(path, ltype);
+    if(rc == 0){
         std::cout << "[lock success]" << std::endl;
+    }else if(rc > 0){
+        print_errno(rc);
     }
 }
 
@@ -131,8 +152,11 @@ void create_repl(FtpClient& client){
     std::string path;
     std::cout << "path: ";
     std::cin >> path;
-    if(client.create_(path) == 0){
+    int rc = client.create_(path);
+    if(rc == 0){
         std::cout << "[create success]" << std::endl;
+    }else if(rc > 0){
+        print_errno(rc);
     }
 }
 

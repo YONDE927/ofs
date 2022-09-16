@@ -86,14 +86,22 @@ int Client::run(SocketTask& task){
 }
 
 int Client::conn(){
-    int sd = socket(AF_INET, SOCK_STREAM, 0);
-    if(sd < 0){return -1;}
-
-    if(connect(sd, (struct sockaddr*)&addr_, sizeof(addr_)) < 0){
-        std::error_code ec(errno, std::generic_category());
-        std::cout << "connect error happen: " << ec.message() << std::endl; 
-        return -1; 
+    if(sd < 0){
+        sd = socket(AF_INET, SOCK_STREAM, 0);
+        if(sd < 0){return -1;}
+        if(connect(sd, (struct sockaddr*)&addr_, sizeof(addr_)) < 0){
+            std::error_code ec(errno, std::generic_category());
+            std::cout << "connect error happen: " << ec.message() << std::endl; 
+            return -1; 
+        }
     }
-
     return sd;
+}
+
+int Client::close_socket(){
+    if(sd > 0){
+        close(sd);
+        sd = -1;
+    }
+    return 0;
 }

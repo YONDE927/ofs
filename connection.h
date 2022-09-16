@@ -31,9 +31,11 @@ class Server{
 class Client{
     private:
         sockaddr_in addr_;
+        int sd{-1};
     public:
         Client(std::string ip, short port);
         ~Client();
         int run(SocketTask& task);
         int conn();
+        int close_socket();
 };

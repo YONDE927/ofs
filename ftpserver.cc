@@ -369,7 +369,6 @@ int FtpServer::create_(int sd){
     if(recv(sd, &req, req_size, 0) != req_size){
         return -1;
     }
-   
     //createの実行
     int err_code{0};
     if(creat(req.path, S_IRWXU) < 0){
@@ -395,47 +394,52 @@ const int FtpServer::run(int socket){
         close(socket);
         return -1;
     }
-    //recv request
-    enum ftp::requestType rtype;
-    int rtype_size = sizeof(rtype);
-    if(recv(socket, &rtype, rtype_size, 0) != rtype_size){
-        close(socket);
-        return -1;
-    };
-
-    //switch request
-    switch(rtype){
-        case ftp::echoback:
-            std::cout << "echoback" << std::endl;
-            echoback_(socket);
-            break;
-        case ftp::lock:
-            std::cout << "lock" << std::endl;
-            lock_(socket);
-            break;
-        case ftp::getattr:
-            std::cout << "getattr" << std::endl;
-            getattr_(socket);
-            break;
-        case ftp::readdir:
-            std::cout << "readdir" << std::endl;
-            readdir_(socket);
-            break;
-        case ftp::read:
-            std::cout << "read" << std::endl;
-            read_(socket);
-            break;
-        case ftp::write:
-            std::cout << "write" << std::endl;
-            write_(socket);
-            break;
-        case ftp::create:
-            std::cout << "create" << std::endl;
-            create_(socket);
-            break;
-        default:
-            break;
-    };
-    close(socket);
+    while(socket > 0){
+        //recv request
+        enum ftp::requestType rtype;
+        int rtype_size = sizeof(rtype);
+        if(recv(socket, &rtype, rtype_size, 0) != rtype_size){
+            close(socket);
+            return -1;
+        };
+        int rc{0};
+        //switch request
+        switch(rtype){
+            case ftp::echoback:
+                std::cout << "echoback" << std::endl;
+                rc = echoback_(socket);
+                break;
+            case ftp::lock:
+                std::cout << "lock" << std::endl;
+                rc = lock_(socket);
+                break;
+            case ftp::getattr:
+                std::cout << "getattr" << std::endl;
+                rc = getattr_(socket);
+                break;
+            case ftp::readdir:
+                std::cout << "readdir" << std::endl;
+                rc = readdir_(socket);
+                break;
+            case ftp::read:
+                std::cout << "read" << std::endl;
+                rc = read_(socket);
+                break;
+            case ftp::write:
+                std::cout << "write" << std::endl;
+                rc = write_(socket);
+                break;
+            case ftp::create:
+                std::cout << "create" << std::endl;
+                rc = create_(socket);
+                break;
+            default:
+                break;
+        };
+        if(rc < 0){
+            close(socket);
+            rc = 0;
+        }
+    }
     return 0;
 };

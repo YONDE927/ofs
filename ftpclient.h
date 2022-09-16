@@ -6,6 +6,7 @@
 #include <string>
 #include <vector>
 #include <memory>
+#include <mutex>
 
 #include <sys/stat.h>
 #include <dirent.h>
@@ -13,6 +14,7 @@
 class FtpClient{
     private:
         Client client_;
+        std::mutex mtx_;
     public:
         FtpClient(std::string ip, short port);
         ~FtpClient();
