@@ -1,0 +1,17 @@
+[
+{
+  "directory": "/home/yonde/devs/syncfile/build",
+  "command": "/usr/bin/c++    -O0 -ggdb -std=gnu++20 -o CMakeFiles/test-syncfile.dir/connection.cc.o -c /home/yonde/devs/syncfile/connection.cc",
+  "file": "/home/yonde/devs/syncfile/connection.cc"
+},
+{
+  "directory": "/home/yonde/devs/syncfile/build",
+  "command": "/usr/bin/c++    -O0 -ggdb -std=gnu++20 -o CMakeFiles/test-syncfile.dir/ftpserver.cc.o -c /home/yonde/devs/syncfile/ftpserver.cc",
+  "file": "/home/yonde/devs/syncfile/ftpserver.cc"
+},
+{
+  "directory": "/home/yonde/devs/syncfile/build",
+  "command": "/usr/bin/c++    -O0 -ggdb -std=gnu++20 -o CMakeFiles/test-syncfile.dir/test-syncfile.cc.o -c /home/yonde/devs/syncfile/test-syncfile.cc",
+  "file": "/home/yonde/devs/syncfile/test-syncfile.cc"
+}
+]
