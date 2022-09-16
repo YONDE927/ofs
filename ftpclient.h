@@ -5,8 +5,11 @@
 #include <netinet/in.h>
 #include <string>
 #include <vector>
+#include <list>
 #include <memory>
 #include <mutex>
+#include <condition_variable>
+#include <thread>
 
 #include <sys/stat.h>
 #include <dirent.h>
@@ -15,6 +18,7 @@ class FtpClient{
     private:
         Client client_;
         std::mutex mtx_;
+        std::thread request_sender;
     public:
         FtpClient(std::string ip, short port);
         ~FtpClient();

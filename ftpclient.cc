@@ -6,6 +6,7 @@
 #include <iostream>
 #include <memory>
 #include <mutex>
+#include <sys/socket.h>
 
 FtpClient::FtpClient(std::string ip, short port):client_(ip, port){
 }
@@ -150,15 +151,12 @@ int FtpClient::readdir_(std::string path, std::vector<dirent>& dirents){
     if(res.errno_ != 0){
         return res.errno_;
     }else{
-        struct dirent de;
-        for(int i=0; i<res.ndirent; i++){
-            if(recv(sd, &de, sizeof(de), 0) != sizeof(de)){
-                std::cout << "recv dirent error" << std::endl;
-                dirents.clear();
-                client_.close_socket();
-                return -1;
-            }
-            dirents.push_back(de);
+        //struct dirent de;
+        int dirents_size = res.ndirent * sizeof(dirent);
+        dirents.resize(res.ndirent);
+        if(recv(sd, dirents.data(), dirents_size, MSG_WAITALL) != dirents_size){
+            client_.close_socket();
+            return -1;
         }
         return 0;
     }
@@ -198,7 +196,7 @@ int FtpClient::read_(std::string path, int offset, int size,
         return res.errno_;
     }else{
         buffer.resize(res.size);
-        if(recv(sd, buffer.data(), res.size, 0) != res.size){
+        if(recv(sd, buffer.data(), res.size, MSG_WAITALL) != res.size){
             client_.close_socket();
             return -1;
         }

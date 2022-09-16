@@ -271,9 +271,7 @@ int FtpServer::readdir_(int sd){
     //dirent配列の送信
     if(dirents.size() > 0){
         int dirents_size = dirents.size() * sizeof(dirent);
-        int nsend = send(sd, dirents.data(), dirents_size, 0);
-        std::cout << "dirents nsend == " << nsend << ", but dirents_size == " << dirents_size << std::endl;
-        if(nsend != dirents_size){
+        if(send(sd, dirents.data(), dirents_size, 0) != dirents_size){
             return -1;
         }
     }
@@ -355,7 +353,7 @@ int FtpServer::write_(int sd){
     }
     //dataの受信
     std::shared_ptr<char> buffer(new char[req.size]);
-    if(recv(sd, buffer.get(), req.size, 0) != req.size){
+    if(recv(sd, buffer.get(), req.size, MSG_WAITALL) != req.size){
         return -1;
     }
     //dataの書き込み
