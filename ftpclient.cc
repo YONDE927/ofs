@@ -131,12 +131,14 @@ int FtpClient::readdir_(std::string path, std::vector<dirent>& dirents){
     int sd = client_.conn();
     if(sd < 0){
         client_.close_socket();
+        std::cout << "conn socket" << std::endl;
         return ENETDOWN;
     }
 
     auto rtype = ftp::readdir;
     if(send(sd, &rtype, sizeof(rtype), 0) != sizeof(rtype)){
         client_.close_socket();
+        std::cout << "send req type" << std::endl;
         return ENETDOWN;
     }
 
@@ -145,12 +147,14 @@ int FtpClient::readdir_(std::string path, std::vector<dirent>& dirents){
     std::memcpy(&req.path, path.c_str(), path.size() + 1);
     if(send(sd, &req, sizeof(req), 0) != sizeof(req)){
         client_.close_socket();
+        std::cout << "send req" << std::endl;
         return ENETDOWN;
     }
 
     ftp::readdirRes res;
     if(recv(sd, &res, sizeof(res), MSG_WAITALL) != sizeof(res)){
         client_.close_socket();
+        std::cout << "recv res" << std::endl;
         return ENETDOWN;
     }
 
@@ -159,9 +163,10 @@ int FtpClient::readdir_(std::string path, std::vector<dirent>& dirents){
     }else{
         struct dirent de;
         for(int i=0; i<res.ndirent; i++){
-            if(recv(sd, &de, sizeof(de), 0) != sizeof(de)){
+            if(recv(sd, &de, sizeof(de), MSG_WAITALL) != sizeof(de)){
                 dirents.clear();
                 client_.close_socket();
+                std::cout << "recv dirent type" << std::endl;
                 return ENETDOWN;
             }
             dirents.push_back(de);
