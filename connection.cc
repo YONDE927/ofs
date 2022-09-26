@@ -30,6 +30,7 @@ Server::Server(std::string ip, short port){
     addr_.sin_family = AF_INET;
     addr_.sin_addr.s_addr = inet_addr(ip.c_str());
     addr_.sin_port = htons(port);
+    avoid_sigpipe();
 }
 
 Server::~Server(){
@@ -78,6 +79,7 @@ Client::Client(std::string ip, short port){
     addr_.sin_family = AF_INET;
     addr_.sin_addr.s_addr = inet_addr(ip.c_str());
     addr_.sin_port = htons(port);
+    avoid_sigpipe();
 }
 
 Client::~Client(){

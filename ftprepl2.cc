@@ -173,6 +173,16 @@ int create_repl(TryFtpClient& client){
     return 0;
 }
 
+int show_queue_repl(TryFtpClient& client){
+    int rc{0};
+    if(rc == 0){
+        std::cout << "[create success]" << std::endl;
+    }else{
+        std::cout << strerror(rc) << std::endl;
+    }
+    return 0;
+}
+
 int repl_switch(std::string oper, TryFtpClient& client){
     if(oper == "echoback"){
         echoback_repl(client);
