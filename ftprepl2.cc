@@ -4,6 +4,7 @@
 #include "ftpserver.h"
 #include "connection.h"
 
+#include <asm-generic/errno.h>
 #include <cstring>
 #include <iostream>
 #include <memory>
@@ -16,34 +17,43 @@
 #include <sys/stat.h>
 #include <dirent.h>
 
-void echoback_repl(FtpClient& client){
+int echoback_repl(FtpClient& client){
     std::string msg;
     std::cout << "msg: ";
     std::cin >> msg;
     client.echoback_(msg);
+    return 0;
 }
 
-void getattr_repl(FtpClient& client){
+int getattr_repl(FtpClient& client){
     std::string path;
     std::cout << "path: ";
     std::cin >> path;
     struct stat stbuf;
-    if(client.getattr_(path, stbuf) == 0){
+    int rc = client.getattr_(path, stbuf);
+    if(rc == 0){
         std::cout << stbuf.st_size << " " << stbuf.st_ctime 
             << " " << stbuf.st_mtime << std::endl;
+    }else{
+        std::cout << strerror(rc) << std::endl;
     }
+    return 0;
 }
 
-void readdir_repl(FtpClient& client){
+int readdir_repl(FtpClient& client){
     std::string path;
     std::cout << "path: ";
     std::cin >> path;
     std::vector<dirent> dirents;
-    if(client.readdir_(path, dirents) == 0){
+    int rc = client.readdir_(path, dirents);
+    if(rc == 0){
         for(auto& de: dirents){
             std::cout << de.d_name << std::endl;
         }
+    }else{
+        std::cout << strerror(rc) << std::endl;
     }
+    return 0;
 }
 
 int input_int(){
@@ -59,7 +69,7 @@ int input_int(){
     return i;
 }
 
-void read_repl(FtpClient& client){
+int read_repl(FtpClient& client){
     std::string path;
     std::cout << "path: ";
     std::cin >> path;
@@ -67,18 +77,22 @@ void read_repl(FtpClient& client){
     std::cout << "offset: ";
     offset = input_int();
     if(offset < 0){
-        return;
+        return -1;
     }
     int size;
     std::cout << "size: ";
     size = input_int();
     if(size < 0){
-        return;
+        return -1;
     }
     std::shared_ptr<char> buffer(new char[size]);
-    if(client.read_(path, offset, size, buffer.get()) == 0){
+    int rc = client.read_(path, offset, size, buffer.get());
+    if(rc == 0){
         std::cout << buffer << std::endl;
+    }else{
+        std::cout << strerror(rc) << std::endl;
     }
+    return 0;
 }
 
 std::shared_ptr<char> dup_shared(std::string str){
@@ -87,7 +101,7 @@ std::shared_ptr<char> dup_shared(std::string str){
     return buffer;
 }
 
-void write_repl(FtpClient& client){
+int write_repl(TryFtpClient& client){
     std::string path;
     std::cout << "path: ";
     std::cin >> path;
@@ -95,25 +109,30 @@ void write_repl(FtpClient& client){
     std::cout << "offset: ";
     offset = input_int();
     if(offset < 0){
-        return;
+        return 0;
     }
     int size;
     std::cout << "size: ";
     size = input_int();
     if(size < 0){
-        return;
+        return 0;
     }
 
     std::string str;
     std::cout << "buffer: ";
     std::cin >> str;
     std::shared_ptr<char> buffer = dup_shared(str);
-    if(client.write_(path, offset, size, buffer) == 0){
+    
+    int rc = client.ewrite_(path, offset, size, buffer, true);
+    if(rc == 0){
         std::cout << "[write success]" << std::endl;
+    }else{
+        std::cout << strerror(rc) << std::endl;
     }
+    return 0;
 }
 
-void lock_repl(FtpClient& client){
+int lock_repl(TryFtpClient& client){
     std::string path;
     std::cout << "path: ";
     std::cin >> path;
@@ -130,23 +149,31 @@ void lock_repl(FtpClient& client){
     }else if(ltype_s == "unwlock"){
         ltype = ftp::unwlock;
     }else{
-        return;
+        return 0;
     }
-    if(client.lock_(path, ltype) == 0){
+    int rc = client.elock_(path, ltype, true);
+    if(rc == 0){
         std::cout << "[lock success]" << std::endl;
+    }else{
+        std::cout << strerror(rc) << std::endl;
     }
+    return 0;
 }
 
-void create_repl(FtpClient& client){
+int create_repl(TryFtpClient& client){
     std::string path;
     std::cout << "path: ";
     std::cin >> path;
-    if(client.create_(path) == 0){
+    int rc = client.ecreate_(path, true);
+    if(rc == 0){
         std::cout << "[create success]" << std::endl;
+    }else{
+        std::cout << strerror(rc) << std::endl;
     }
+    return 0;
 }
 
-int repl_switch(std::string oper, FtpClient& client){
+int repl_switch(std::string oper, TryFtpClient& client){
     if(oper == "echoback"){
         echoback_repl(client);
     }else if(oper == "getattr"){
@@ -167,11 +194,14 @@ int repl_switch(std::string oper, FtpClient& client){
     return 0;
 }
 
-void repl(FtpClient& client){
+void repl(TryFtpClient& client){
     for(;;){
         std::string oper;
         std::cout << ">> ";
         std::cin >> oper;
+        if(!std::cin){
+            break;
+        }
         if(repl_switch(oper, client) < 0){
             break;
         }
@@ -190,7 +220,7 @@ int client_session(std::string config_path){
         std::cout << "config error" << std::endl;
         return -1;
     }
-    FtpClient fclient(ip, port);
+    TryFtpClient fclient(ip, port);
     repl(fclient);
     return 0;
 }
@@ -226,7 +256,7 @@ int server_session(std::string config_path){
 
 int main(int argc, char** argv){
     if(argc < 3){
-        std::cout << "ftprepl [client/server] [config]" << std::endl;
+        std::cout << "ftprepl2 [client/server] [config]" << std::endl;
         exit(0);
     }
 

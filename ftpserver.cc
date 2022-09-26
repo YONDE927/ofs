@@ -17,7 +17,6 @@
 #include <fcntl.h>
 #include <dirent.h>
 #include <sys/stat.h>
-#include <arpa/inet.h>
 
 in_addr_t FtpServer::get_in_addr(int sd){
     sockaddr_in addr;
@@ -25,7 +24,6 @@ in_addr_t FtpServer::get_in_addr(int sd){
     if(getpeername(sd, (sockaddr*)&addr, &socklen) < 0){
         return -1;
     }else{
-        std::cout << inet_ntoa(addr.sin_addr) << std::endl; 
         return addr.sin_addr.s_addr;
     }
 }
@@ -48,7 +46,7 @@ int FtpServer::echoback_(int sd){
     //echobackReqの受取
     ftp::echobackDatagram dg;
     int dg_size = sizeof(dg);
-    if(recv(sd, &dg, dg_size, 0) != dg_size){
+    if(recv(sd, &dg, dg_size, MSG_WAITALL) != dg_size){
         return -1;
     }
     //echobackの送信
@@ -168,7 +166,7 @@ int FtpServer::lock_(int sd){
     //lockReqの受取
     ftp::lockReq req;
     int req_size = sizeof(req);
-    if(recv(sd, &req, req_size, 0) != req_size){
+    if(recv(sd, &req, req_size, MSG_WAITALL) != req_size){
         return -1;
     }
     //lockReqの検証
@@ -211,7 +209,7 @@ int FtpServer::getattr_(int sd){
     //getattrReqの受取
     ftp::getattrReq req;
     int req_size = sizeof(req);
-    if(recv(sd, &req, req_size, 0) != req_size){
+    if(recv(sd, &req, req_size, MSG_WAITALL) != req_size){
         return -1;
     }
    
@@ -241,7 +239,7 @@ int FtpServer::readdir_(int sd){
     //readdirReqの受取
     ftp::readdirReq req;
     int req_size = sizeof(req);
-    if(recv(sd, &req, req_size, 0) != req_size){
+    if(recv(sd, &req, req_size, MSG_WAITALL) != req_size){
         return -1;
     }
     //readdirの実行
@@ -285,7 +283,7 @@ int FtpServer::read_(int sd){
     //readReqの受取
     ftp::readReq req;
     int req_size = sizeof(req);
-    if(recv(sd, &req, req_size, 0) != req_size){
+    if(recv(sd, &req, req_size, MSG_WAITALL) != req_size){
         return -1;
     }
     //read sizeの確認
@@ -327,7 +325,7 @@ int FtpServer::write_(int sd){
     //writeReqの受取
     ftp::writeReq req;
     int req_size = sizeof(req);
-    if(recv(sd, &req, req_size, 0) != req_size){
+    if(recv(sd, &req, req_size, MSG_WAITALL) != req_size){
         return -1;
     }
     //write req validation
@@ -368,9 +366,10 @@ int FtpServer::create_(int sd){
     //createReqの受取
     ftp::createReq req;
     int req_size = sizeof(req);
-    if(recv(sd, &req, req_size, 0) != req_size){
+    if(recv(sd, &req, req_size, MSG_WAITALL) != req_size){
         return -1;
     }
+   
     //createの実行
     int err_code{0};
     if(creat(req.path, S_IRWXU) < 0){
@@ -390,6 +389,7 @@ FtpServer::~FtpServer(){
 };
 
 const int FtpServer::run(int socket){
+    int rc{0};
     //check ip
     if(!auth_host(socket)){
         std::cout << "invalid host" << std::endl;
@@ -400,11 +400,11 @@ const int FtpServer::run(int socket){
         //recv request
         enum ftp::requestType rtype;
         int rtype_size = sizeof(rtype);
-        if(recv(socket, &rtype, rtype_size, 0) != rtype_size){
+        if(recv(socket, &rtype, rtype_size, MSG_WAITALL) != rtype_size){
             close(socket);
             return -1;
         };
-        int rc{0};
+
         //switch request
         switch(rtype){
             case ftp::echoback:
@@ -426,7 +426,7 @@ const int FtpServer::run(int socket){
             case ftp::read:
                 std::cout << "read" << std::endl;
                 rc = read_(socket);
-                break;
+            break;
             case ftp::write:
                 std::cout << "write" << std::endl;
                 rc = write_(socket);
@@ -436,11 +436,12 @@ const int FtpServer::run(int socket){
                 rc = create_(socket);
                 break;
             default:
+                rc = -1;
                 break;
         };
         if(rc < 0){
             close(socket);
-            rc = 0;
+            socket = -1;
         }
     }
     return 0;

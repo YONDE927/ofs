@@ -1,5 +1,6 @@
 #pragma once
 
+#include <memory>
 #define MSG_LEN 32
 #define PATH_LEN 256
 
