@@ -406,3 +406,13 @@ int TryFtpClient::ecreate_(std::string path, bool do_resend){
     }
     return rc;
 }
+
+const char* requestType_str[] = {"echoback", "lock", "getattr", "readdir",
+    "read", "write", "create"};
+
+void TryFtpClient::print_unsend_reqs(){
+    for(const auto& req : unsend_reqs){
+        std::cout << "type: " << requestType_str[req->reqtype];
+        std::cout << " path: " << req->path << std::endl;
+    }
+}

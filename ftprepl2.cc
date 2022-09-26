@@ -174,12 +174,7 @@ int create_repl(TryFtpClient& client){
 }
 
 int show_queue_repl(TryFtpClient& client){
-    int rc{0};
-    if(rc == 0){
-        std::cout << "[create success]" << std::endl;
-    }else{
-        std::cout << strerror(rc) << std::endl;
-    }
+    client.print_unsend_reqs();
     return 0;
 }
 
@@ -198,6 +193,8 @@ int repl_switch(std::string oper, TryFtpClient& client){
         lock_repl(client);
     }else if(oper == "create"){
         create_repl(client);
+    }else if(oper == "showreqs"){
+        show_queue_repl(client);
     }else if(oper == "exit"){
         return -1;
     }

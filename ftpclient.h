@@ -50,4 +50,5 @@ class TryFtpClient: public FtpClient{
         int ewrite_(std::string path, int offset, int size,
                 std::shared_ptr<char> buffer, bool do_resend);
         int ecreate_(std::string path, bool do_resend);
+        void print_unsend_reqs();
 };
