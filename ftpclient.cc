@@ -84,6 +84,7 @@ int FtpClient::lock_(std::string path, ftp::lockType type){
 }
 
 int FtpClient::getattr_(std::string path, struct stat& stbuf){
+    std::lock_guard<std::mutex> lock(mtx_);
     int sd = client_.conn();
     if(sd < 0){
         client_.close_socket();
@@ -325,7 +326,7 @@ int TryFtpClient::switch_req(std::shared_ptr<ftp::baseReq> req){
 
 void TryFtpClient::sending_task(){
     int sleep_interval{0};
-    const int max_interval = 5;
+    const int max_interval = 3;
     for(;;){
         if(term){
             break;
@@ -340,6 +341,7 @@ void TryFtpClient::sending_task(){
                 unsend_reqs.erase(unsend_reqs.begin());
                 sleep_interval = 0;
             }else{
+                //std::cout << "background try fail" << std::endl;
                 sleep(sleep_interval);
                 if(sleep_interval < max_interval){
                     sleep_interval += 1;
@@ -371,6 +373,7 @@ int TryFtpClient::elock_(std::string path, ftp::lockType type
             preq->type = type;
             std::memcpy(&preq->path, path.c_str(), path.size() + 1);
             unsend_reqs.push_back(preq); 
+            cond_.notify_one();
         }
     }
     return rc;
@@ -388,6 +391,7 @@ int TryFtpClient::ewrite_(std::string path, int offset, int size,
             preq->size = size;
             std::memcpy(&preq->path, path.c_str(), path.size() + 1);
             unsend_reqs.push_back(preq); 
+            cond_.notify_one();
         }
     }
     return rc;
@@ -401,8 +405,8 @@ int TryFtpClient::ecreate_(std::string path, bool do_resend){
             preq->reqtype = ftp::create;
             std::memcpy(&preq->path, path.c_str(), path.size() + 1);
             unsend_reqs.push_back(preq); 
+            cond_.notify_one();
         }
-        return -1;
     }
     return rc;
 }

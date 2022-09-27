@@ -13,9 +13,9 @@ void avoid_sigpipe(){
     signal(SIGPIPE, SIG_IGN);
 }
 
-void set_timeout(int socket){
+void set_timeout(int socket, int time){
     struct timeval timeout;      
-    timeout.tv_sec = 3;
+    timeout.tv_sec = time;
     timeout.tv_usec = 0;
     setsockopt(socket, SOL_SOCKET, SO_RCVTIMEO, &timeout, sizeof timeout);
     setsockopt(socket, SOL_SOCKET, SO_SNDTIMEO, &timeout, sizeof timeout);
@@ -70,7 +70,6 @@ void Server::run(SocketTask& task){
         sockaddr_in client_addr;
         int client_socket = accept(listen_socket,
                 (struct sockaddr*)&client_addr, &addr_len);
-
         if(client_socket < 0){
             std::error_code ec(errno, std::generic_category());
             std::cout << "accept error happen: " << ec.message() << std::endl; 
@@ -111,10 +110,11 @@ int Client::conn(){
         sd = socket(AF_INET, SOCK_STREAM, 0);
         if(sd < 0){return -1;}
 
+        //set timeout
+        set_timeout(sd,3);
+
         if(connect(sd, (struct sockaddr*)&addr_, sizeof(addr_)) < 0){
-            std::error_code ec(errno, std::generic_category());
-            std::cout << "connect error happen: " << ec.message() << std::endl; 
-            return -1; 
+            return -errno; 
         }
     }
     return sd;
